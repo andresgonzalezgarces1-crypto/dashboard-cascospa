@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Cascospa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#eef2f7;color:#1a1a2e;font-size:14px}
+/* HEADER */
+.header{background:linear-gradient(135deg,#1E2270 0%,#1A6FB5 55%,#29ABD4 100%);padding:.9rem 2rem;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(30,34,112,0.2)}
+.header img{height:48px;width:auto}
+.header h1{font-size:18px;font-weight:700;color:#fff}
+.header p{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px}
+.lastup{font-size:11px;color:rgba(255,255,255,.6)}
+.rbtn{font-size:12px;padding:5px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;cursor:pointer;font-family:inherit}
+.rbtn:hover{background:rgba(255,255,255,.15)}
+/* LAYOUT */
+.page{max-width:1140px;margin:0 auto;padding:1.2rem 1.5rem}
+/* FILTERS */
+.filters-card{background:#fff;border-radius:12px;padding:.9rem 1.2rem;margin-bottom:1.1rem;border:1px solid #dde3ed;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end}
+.fb{display:flex;flex-direction:column;gap:5px}
+.flabel{font-size:10px;font-weight:700;color:#1A6FB5;text-transform:uppercase;letter-spacing:.07em}
+.hchips{display:flex;gap:5px;flex-wrap:wrap}
+.hchip{padding:4px 12px;font-size:12px;font-weight:500;border:1.5px solid #dde3ed;border-radius:20px;cursor:pointer;background:#fff;color:#555;user-select:none;transition:all .15s;white-space:nowrap}
+.hchip.sel{color:#fff;border-color:transparent;font-weight:600}
+.prod-wrap{position:relative}
+.prod-btn{padding:5px 30px 5px 12px;font-size:12px;font-weight:500;border:1.5px solid #dde3ed;border-radius:20px;cursor:pointer;background:#fff;color:#444;font-family:inherit;outline:none;min-width:170px;text-align:left}
+.prod-btn:hover{border-color:#1A6FB5}
+.prod-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:#1A6FB5;font-size:10px}
+.prod-dd{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid #1A6FB5;border-radius:10px;box-shadow:0 4px 16px rgba(26,111,181,0.13);z-index:100;min-width:220px;overflow:hidden;max-height:320px;overflow-y:auto}
+.prod-dd.open{display:block}
+.prod-opt{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:12px;color:#444;cursor:pointer;transition:background .1s;user-select:none}
+.prod-opt:hover{background:#f0f6fb}
+.prod-opt.sel{background:#e8f2fc;color:#1A6FB5;font-weight:600}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pcheck{margin-left:auto;color:#1A6FB5;opacity:0;font-size:12px}
+.prod-opt.sel .pcheck{opacity:1}
+.clr-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:1.5px solid #dde3ed;background:#fff;color:#888;cursor:pointer;font-family:inherit;white-space:nowrap}
+.clr-btn:hover{border-color:#1A6FB5;color:#1A6FB5}
+/* TABS */
+.tabs{display:flex;gap:3px;margin-bottom:1.1rem;background:#fff;border-radius:10px;padding:4px;border:1px solid #dde3ed;width:fit-content}
+.tab{padding:7px 18px;font-size:13px;font-weight:500;border:none;border-radius:7px;cursor:pointer;background:transparent;color:#888;font-family:inherit;transition:all .15s}
+.tab.active{background:linear-gradient(135deg,#1A6FB5,#29ABD4);color:#fff;font-weight:600;box-shadow:0 2px 6px rgba(26,111,181,0.2)}
+/* METRIC CARDS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:1.1rem}
+.mc{background:#fff;border-radius:10px;padding:13px 15px;border:1px solid #dde3ed;border-top:3px solid #1A6FB5}
+.mc.warn{border-top-color:#E24B4A}
+.mc.ok{border-top-color:#1D9E75}
+.mc.neu{border-top-color:#BA7517}
+.ml{font-size:10px;color:#1A6FB5;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.mv{font-size:20px;font-weight:700;color:#1E2270;line-height:1.1}
+.ms{font-size:10px;color:#aaa;margin-top:2px}
+.mv-sm{font-size:15px}
+/* CARDS */
+.card{background:#fff;border:1px solid #dde3ed;border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:12px}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.stitle{font-size:10px;font-weight:700;color:#1A6FB5;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.leg{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;font-size:11px;color:#555}
+.leg span{display:flex;align-items:center;gap:4px}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+/* PRESUPUESTO CARDS */
+.bud-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.bud-card{background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #dde3ed}
+.bud-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bud-name{font-size:12px;font-weight:700;color:#1E2270}
+.bud-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.bud-badge.ok{background:#e8f7f0;color:#1D9E75}
+.bud-badge.warn{background:#fff0f0;color:#E24B4A}
+.bud-badge.neu{background:#fff8e8;color:#BA7517}
+.bud-bar-bg{height:7px;background:#eef2f7;border-radius:4px;overflow:hidden}
+.bud-bar{height:100%;border-radius:4px;transition:width .4s}
+.bud-nums{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:#888}
+/* RANKING TABLE */
+.rtable{width:100%;border-collapse:collapse;font-size:12px}
+.rtable th{text-align:left;padding:7px 9px;font-size:10px;font-weight:700;color:#1A6FB5;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e8f2fc;white-space:nowrap}
+.rtable th.r{text-align:right}
+.rtable td{padding:7px 9px;border-bottom:1px solid #f0f4f8;color:#1a1a2e}
+.rtable td.r{text-align:right;color:#555}
+.rtable tr:last-child td{border-bottom:none}
+.rtable tr:hover td{background:#f7fafd}
+.bi{display:inline-block;height:5px;border-radius:3px;vertical-align:middle;margin-right:5px;opacity:.75}
+.punto-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;color:#fff}
+/* LOADING */
+.loading{text-align:center;padding:4rem;color:#1A6FB5;font-size:14px}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid #dde3ed;border-top-color:#1A6FB5;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.errmsg{background:#fff5f5;border:1px solid #fcc;border-radius:10px;padding:1.5rem;color:#c00;font-size:13px;line-height:1.7}
+@media(max-width:600px){.card-grid{grid-template-columns:1fr}.bud-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+  <img src="logo_cs.jpeg" alt="Cascospa">
+  <div><h1>Dashboard de ventas</h1><p>Resumen ejecutivo &mdash; Cascospa 2026</p></div>
+  <div class="hright">
+    <span class="lastup" id="lastup"></span>
+    <button class="rbtn" onclick="loadData()">&#x21BA; Actualizar</button>
+  </div>
+</div>
+
+<div class="page">
+  <div id="loading" class="loading"><div class="spinner"></div><br>Cargando datos...</div>
+  <div id="errdiv" style="display:none"></div>
+  <div id="main" style="display:none">
+
+    <!-- FILTROS -->
+    <div class="filters-card">
+      <div class="fb"><div class="flabel">Mes</div><div class="hchips" id="chips-mes"></div></div>
+      <div class="fb"><div class="flabel">Punto de venta</div><div class="hchips" id="chips-punto"></div></div>
+      <div class="fb">
+        <div class="flabel">Producto</div>
+        <div class="prod-wrap">
+          <button class="prod-btn" id="prod-btn" onclick="toggleDD()"><span id="prod-lbl">Todos los productos</span></button>
+          <span class="prod-arrow">&#9660;</span>
+          <div class="prod-dd" id="prod-dd"></div>
+        </div>
+      </div>
+      <button class="clr-btn" onclick="clearFilters()">&#x2715; Limpiar</button>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" id="tbtn-ejecutivo" onclick="setTab('ejecutivo')">Resumen ejecutivo</button>
+      <button class="tab" id="tbtn-puntos" onclick="setTab('puntos')">Por punto de venta</button>
+      <button class="tab" id="tbtn-productos" onclick="setTab('productos')">Por producto</button>
+    </div>
+
+    <!-- TAB 1: EJECUTIVO -->
+    <div id="pane-ejecutivo">
+      <div class="metrics" id="mrow-exec"></div>
+
+      <!-- Presupuesto servicios -->
+      <div class="card">
+        <p class="stitle">Cumplimiento presupuesto &mdash; servicios por dia</p>
+        <div class="bud-grid" id="bud-grid"></div>
+      </div>
+
+      <!-- Tendencia + Donut -->
+      <div class="card-grid">
+        <div class="card" style="margin-bottom:0">
+          <p class="stitle">Tendencia de ventas por mes</p>
+          <div id="leg-tend" class="leg"></div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="ch-tend" role="img" aria-label="Tendencia ventas"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <p class="stitle">Participacion por punto</p>
+          <div id="leg-donut" class="leg"></div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="ch-donut" role="img" aria-label="Participacion punto"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Top productos -->
+      <div class="card" style="margin-top:12px">
+        <p class="stitle">Top productos por valor</p>
+        <table class="rtable" id="top-prod-table">
+          <thead><tr><th>Producto</th><th class="r">Valor</th><th class="r">Unidades</th><th class="r">% del total</th></tr></thead>
+          <tbody id="top-prod-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: POR PUNTO -->
+    <div id="pane-puntos" style="display:none">
+      <div class="metrics" id="mrow-puntos"></div>
+      <div class="card">
+        <p class="stitle">Ventas por mes &mdash; valor ($)</p>
+        <div id="leg-pv" class="leg"></div>
+        <div style="position:relative;width:100%;height:280px"><canvas id="ch-pv" role="img" aria-label="Ventas valor mes punto"></canvas></div>
+      </div>
+      <div class="card">
+        <p class="stitle">Ventas por mes &mdash; unidades</p>
+        <div id="leg-pu" class="leg"></div>
+        <div style="position:relative;width:100%;height:280px"><canvas id="ch-pu" role="img" aria-label="Ventas unidades mes punto"></canvas></div>
+      </div>
+      <div class="card">
+        <p class="stitle">Ranking de puntos</p>
+        <table class="rtable">
+          <thead><tr><th>Punto</th><th class="r">Total ventas</th><th class="r">Unidades</th><th class="r">Servicios/dia</th><th class="r">Venta/dia</th></tr></thead>
+          <tbody id="ranking-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: POR PRODUCTO -->
+    <div id="pane-productos" style="display:none">
+      <div class="card">
+        <p class="stitle">Unidades vendidas por producto</p>
+        <div id="ch-prod-wrap" style="position:relative;width:100%"><canvas id="ch-prod" role="img" aria-label="Unidades producto"></canvas></div>
+      </div>
+      <div class="card">
+        <p class="stitle">Detalle por producto</p>
+        <table class="rtable">
+          <thead><tr><th>Producto</th><th class="r">Unidades</th><th class="r">Valor total</th><th class="r">Precio prom.</th><th class="r">% ventas</th></tr></thead>
+          <tbody id="prod-det-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_3NOwnU3GJkrCavXh2aLROdbGW6uJan9SZzj-JdTElVjye7TozcIAz9180u60O8yNe2IkgzdquaGG/pub?gid=1240327130&single=true&output=csv';
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const PUNTOS=['Florida','Mayorca','Puerta del norte'];
+const CLR={'Florida':'#1A6FB5','Mayorca':'#29ABD4','Puerta del norte':'#1E2270','Unicentro':'#0F6E56'};
+const MES_CLR=['#1A6FB5','#1E2270','#29ABD4','#0F6E56','#185FA5','#3C3489','#5DCAA5','#378ADD','#0C447C','#534AB7','#63C4E0','#1D9E75'];
+const PROD_CLR={'Servicio':'#1A6FB5','IMPER 2.5':'#1E2270','IMPER CALIBRE 2.0':'#29ABD4','IMPER CALIBRE 1.4':'#5DCAA5','CARPAS MOTO':'#185FA5','BALACLAVA':'#D85A30','CHALECO REFLEC.':'#D4537E','GUANTE':'#BA7517','CUELLO':'#639922','CADENA GUAYA':'#888780','PROTECTOR ZAPATO':'#E24B4A','DESCUENTO EMPLEADO':'#5F5E5A'};
+const FESTIVOS=new Set(['2026-1-1','2026-4-3']);
+
+// Presupuesto servicios/dia por punto y mes
+const PRESUPUESTO={
+  'Florida':    {1:24,2:23,3:24,4:25,5:24,6:24,7:24,8:24,9:24,10:24,11:24,12:24},
+  'Mayorca':    {1:13,2:12,3:11,4:11,5:11,6:11,7:11,8:11,9:11,10:11,11:11,12:11},
+  'Puerta del norte':{1:14,2:14,3:13,4:13,5:12,6:12,7:12,8:12,9:12,10:12,11:12,12:12},
+};
+
+const PRODS=[
+  {key:'Servicio',          vk:'Valor servicios',       label:'Servicio lavado'},
+  {key:'IMPER 2.5',         vk:'VENTA IMPER 2.5',       label:'Impermeable 2.5'},
+  {key:'IMPER CALIBRE 2.0', vk:'VALOR 2.0',             label:'Impermeable 2.0'},
+  {key:'IMPER CALIBRE 1.4', vk:'VALOR 1.4',             label:'Impermeable 1.4'},
+  {key:'CARPAS MOTO',       vk:'VALOR CARPA',           label:'Carpas moto'},
+  {key:'BALACLAVA',         vk:'VALOR BALACLAVA',       label:'Balaclava'},
+  {key:'CHALECO REFLEC.',   vk:'VALOR CHALECO',         label:'Chaleco reflectivo'},
+  {key:'GUANTE',            vk:'VALOR GUANTE',          label:'Guantes'},
+  {key:'CUELLO',            vk:'VALOR CUELLO',          label:'Cuello'},
+  {key:'CADENA GUAYA',      vk:'VALOR CADENA GUAYA',    label:'Cadena guaya'},
+  {key:'PROTECTOR ZAPATO',  vk:'VALOR PROTECTOR ZAPATO',label:'Protector zapato'},
+  {key:'DESCUENTO EMPLEADO',vk:'VALOR DTO. EMPLEADO',   label:'Descuento empleado'},
+];
+
+const TODOS_PUNTOS=['Florida','Mayorca','Puerta del norte','Unicentro'];
+let raw=[],chs={},curTab='ejecutivo';
+let selMes=new Set(),selPunto=new Set(TODOS_PUNTOS),selProd=new Set();
+
+const pn=v=>parseFloat(String(v).replace(/,/g,'').replace(/[^0-9.-]/g,''))||0;
+const fmt=n=>'$'+Math.round(n).toLocaleString('es-CO');
+const fmtU=n=>Math.round(n).toLocaleString('es-CO');
+const str=v=>String(v||'').trim();
+const mp=val=>{const v=str(val).toLowerCase();return TODOS_PUNTOS.find(p=>p.toLowerCase()===v)||null;};
+const getDia=r=>+str(r[' Dia']||r['Dia']||'0');
+
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  const rawH=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(line=>{
+    const cols=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+      else if(c===','&&!inQ){cols.push(cur.trim().replace(/^"|"$/g,''));cur='';}
+      else cur+=c;
+    }
+    cols.push(cur.trim().replace(/^"|"$/g,''));
+    const obj={};
+    rawH.forEach((h,i)=>{const v=cols[i]||'';obj[h]=v;obj[h.trim()]=v;});
+    return obj;
+  });
+}
+
+function gv(row){const l=selProd.size>0?PRODS.filter(p=>selProd.has(p.key)):PRODS;return l.reduce((s,p)=>s+pn(row[p.vk]),0);}
+function gu(row){const l=selProd.size>0?PRODS.filter(p=>selProd.has(p.key)):PRODS;return l.reduce((s,p)=>s+pn(row[p.key]),0);}
+function gf(){return raw.filter(r=>selMes.has(str(r['Mes']))&&selPunto.has(r._p));}
+function gap(){return TODOS_PUNTOS.filter(p=>selPunto.has(p));}
+function getMes(r){return str(r['Mes']||r['M']||'');}
+
+function diasReales(data){
+  const s=new Set();
+  data.forEach(r=>{
+    const anio=+r['Año'],mes=+getMes(r),dia=getDia(r);
+    const td=pn(r['Total dia']);
+    if(anio&&mes&&dia&&td>0&&!FESTIVOS.has(anio+'-'+mes+'-'+dia)) s.add(anio+'-'+mes+'-'+dia);
+  });
+  return s.size||1;
+}
+
+function diasRealesPunto(data,punto){
+  const s=new Set();
+  data.filter(r=>r._p===punto).forEach(r=>{
+    const anio=+r['Año'],mes=+getMes(r),dia=getDia(r);
+    const td=pn(r['Total dia']);
+    if(anio&&mes&&dia&&td>0&&!FESTIVOS.has(anio+'-'+mes+'-'+dia)) s.add(anio+'-'+mes+'-'+dia);
+  });
+  return s.size||1;
+}
+
+function buildChips(){
+  const meses=[...new Set(raw.map(r=>getMes(r)).filter(Boolean))].sort((a,b)=>+a-+b);
+  const cm=document.getElementById('chips-mes');cm.innerHTML='';
+  meses.forEach((m,i)=>{
+    const clr=MES_CLR[i%MES_CLR.length];
+    const el=document.createElement('div');
+    el.className='hchip sel';el.dataset.val=m;el.dataset.clr=clr;
+    el.style.cssText='background:'+clr+';border-color:'+clr+';color:#fff';
+    el.textContent=MESES[+m-1]||'M'+m;
+    el.onclick=()=>toggleChip(el,'mes');
+    cm.appendChild(el);selMes.add(m);
+  });
+  const cp=document.getElementById('chips-punto');cp.innerHTML='';
+  TODOS_PUNTOS.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='hchip sel';el.dataset.val=p;el.dataset.clr=CLR[p];
+    el.style.cssText='background:'+CLR[p]+';border-color:'+CLR[p]+';color:#fff';
+    el.textContent=p;
+    el.onclick=()=>toggleChip(el,'punto');
+    cp.appendChild(el);
+  });
+  const dd=document.getElementById('prod-dd');dd.innerHTML='';
+  PRODS.forEach(p=>{
+    const el=document.createElement('div');el.className='prod-opt';el.dataset.val=p.key;
+    el.innerHTML='<span class="pdot" style="background:'+PROD_CLR[p.key]+'"></span>'+p.label+'<span class="pcheck">&#10003;</span>';
+    el.onclick=e=>{e.stopPropagation();toggleProd(el,p.key);};
+    dd.appendChild(el);
+  });
+}
+
+function toggleChip(el,g){
+  const s=g==='mes'?selMes:selPunto;
+  const clr=el.dataset.clr;
+  const chips=[...document.querySelectorAll('#chips-'+(g==='mes'?'mes':'punto')+' .hchip')];
+  if(el.classList.contains('sel')&&s.size===1&&s.has(el.dataset.val)){
+    chips.forEach(c=>{c.classList.add('sel');c.style.cssText='background:'+c.dataset.clr+';border-color:'+c.dataset.clr+';color:#fff';});
+    g==='mes'?selMes=new Set(chips.map(c=>c.dataset.val)):selPunto=new Set(TODOS_PUNTOS);
+  } else {
+    chips.forEach(c=>{c.classList.remove('sel');c.style.cssText='background:#fff;border-color:'+c.dataset.clr+';color:'+c.dataset.clr;});
+    el.classList.add('sel');el.style.cssText='background:'+clr+';border-color:'+clr+';color:#fff';
+    g==='mes'?selMes=new Set([el.dataset.val]):selPunto=new Set([el.dataset.val]);
+  }
+  render();
+}
+
+function toggleProd(el,key){
+  el.classList.toggle('sel');
+  selProd.has(key)?selProd.delete(key):selProd.add(key);
+  const lbl=document.getElementById('prod-lbl');
+  lbl.textContent=selProd.size===0?'Todos los productos':selProd.size===1?PRODS.find(p=>selProd.has(p.key))?.label:selProd.size+' productos';
+  render();
+}
+function toggleDD(){document.getElementById('prod-dd').classList.toggle('open');}
+document.addEventListener('click',e=>{
+  const btn=document.getElementById('prod-btn'),dd=document.getElementById('prod-dd');
+  if(dd&&btn&&!dd.contains(e.target)&&!btn.contains(e.target))dd.classList.remove('open');
+});
+function clearFilters(){
+  document.querySelectorAll('#chips-mes .hchip,#chips-punto .hchip').forEach(el=>{
+    el.classList.add('sel');el.style.cssText='background:'+el.dataset.clr+';border-color:'+el.dataset.clr+';color:#fff';
+  });
+  selMes=new Set(raw.map(r=>getMes(r)).filter(Boolean));
+  selPunto=new Set(TODOS_PUNTOS);selProd=new Set();
+  document.querySelectorAll('.prod-opt').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('prod-lbl').textContent='Todos los productos';
+  render();
+}
+
+async function loadData(){
+  document.getElementById('loading').style.display='block';
+  document.getElementById('main').style.display='none';
+  document.getElementById('errdiv').style.display='none';
+  try{
+    const resp=await fetch(CSV_URL+'&t='+Date.now());
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const text=await resp.text();
+    const parsed=parseCSV(text);
+    raw=parsed.map(r=>({...r,_p:mp(r['Punto'])})).filter(r=>r._p!==null&&getMes(r));
+    if(!raw.length) throw new Error('No se encontraron datos.');
+    buildChips();
+    document.getElementById('loading').style.display='none';
+    document.getElementById('main').style.display='block';
+    document.getElementById('lastup').textContent='Actualizado: '+new Date().toLocaleString('es-CO');
+    render();
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('errdiv').style.display='block';
+    document.getElementById('errdiv').innerHTML='<div class="errmsg"><strong>Error:</strong> '+e.message+'<br><br><button class="rbtn" style="color:#c00;border-color:#c00" onclick="loadData()">Reintentar</button></div>';
+  }
+}
+
+function render(){
+  const data=gf(),puntos=gap();
+  const meses=[...new Set(data.map(r=>getMes(r)))].sort((a,b)=>+a-+b);
+  const total=data.reduce((s,r)=>s+gv(r),0);
+  const dias=diasReales(data);
+  const promDia=total/dias;
+  const svc=data.reduce((s,r)=>s+pn(r['Servicio'])+pn(r['DESCUENTO EMPLEADO']),0);
+  const promSvc=svc/dias;
+
+  if(curTab==='ejecutivo') renderEjecutivo(data,puntos,meses,total,dias,promDia,promSvc);
+  else if(curTab==='puntos') renderPuntos(data,puntos,meses);
+  else renderProductos(data,total);
+}
+
+function dk(id){if(chs[id]){chs[id].destroy();delete chs[id];}}
+
+function renderEjecutivo(data,puntos,meses,total,dias,promDia,promSvc){
+  // Metricas ejecutivo
+  document.getElementById('mrow-exec').innerHTML=
+    '<div class="mc"><div class="ml">Total ventas</div><div class="mv">'+fmt(total)+'</div><div class="ms">corrido del periodo</div></div>'+
+    '<div class="mc"><div class="ml">Venta promedio / dia</div><div class="mv mv-sm">'+fmt(promDia)+'</div><div class="ms">'+dias+' dias trabajados</div></div>'+
+    '<div class="mc"><div class="ml">Servicios / dia</div><div class="mv">'+promSvc.toFixed(1)+'</div><div class="ms">promedio de lavados</div></div>'+
+    '<div class="mc"><div class="ml">Puntos activos</div><div class="mv">'+puntos.length+'</div><div class="ms">de '+TODOS_PUNTOS.length+' totales</div></div>';
+
+  // Presupuesto por punto
+  const budGrid=document.getElementById('bud-grid');
+  budGrid.innerHTML='';
+  PUNTOS.forEach(p=>{
+    if(!selPunto.has(p)) return;
+    const dp=data.filter(r=>r._p===p);
+    const diasP=diasRealesPunto(data,p);
+    const svcReal=dp.reduce((s,r)=>s+pn(r['Servicio'])+pn(r['DESCUENTO EMPLEADO']),0);
+    const promReal=svcReal/diasP;
+    
+    // Presupuesto ponderado por meses seleccionados
+    const mesesSel=[...new Set(dp.map(r=>+getMes(r)))].filter(m=>m>0);
+    let presTotal=0,presDias=0;
+    mesesSel.forEach(m=>{
+      const bud=PRESUPUESTO[p]?PRESUPUESTO[p][m]||0:0;
+      const dm=dp.filter(r=>+getMes(r)===m);
+      const dReal=new Set(dm.filter(r=>pn(r['Total dia'])>0).map(r=>+r['Año']+'-'+m+'-'+getDia(r))).size;
+      presTotal+=bud*dReal;presDias+=dReal;
+    });
+    const presProm=presDias>0?presTotal/presDias:0;
+    const pct=presProm>0?Math.min(Math.round(promReal/presProm*100),150):0;
+    const cls=pct>=95?'ok':pct>=80?'neu':'warn';
+    const barClr=pct>=95?'#1D9E75':pct>=80?'#BA7517':'#E24B4A';
+    
+    budGrid.innerHTML+=`<div class="bud-card">
+      <div class="bud-top">
+        <span class="bud-name">${p}</span>
+        <span class="bud-badge ${cls}">${pct}%</span>
+      </div>
+      <div class="bud-bar-bg"><div class="bud-bar" style="width:${Math.min(pct,100)}%;background:${barClr}"></div></div>
+      <div class="bud-nums"><span>Real: ${promReal.toFixed(1)}/dia</span><span>Meta: ${presProm.toFixed(1)}/dia</span></div>
+    </div>`;
+  });
+
+  // Tendencia linea
+  dk('ch-tend');
+  const tendLabels=meses.map(m=>MESES[+m-1]||'M'+m);
+  const tendDs=puntos.filter(p=>TODOS_PUNTOS.includes(p)).map(p=>({
+    label:p,
+    data:meses.map(m=>Math.round(data.filter(r=>getMes(r)===m&&r._p===p).reduce((s,r)=>s+gv(r),0))),
+    borderColor:CLR[p],backgroundColor:CLR[p]+'22',borderWidth:2,pointRadius:4,
+    pointBackgroundColor:CLR[p],tension:.3,fill:false
+  }));
+  document.getElementById('leg-tend').innerHTML=puntos.map(p=>'<span><span class="ld" style="background:'+CLR[p]+'"></span>'+p+'</span>').join('');
+  chs['ch-tend']=new Chart(document.getElementById('ch-tend'),{
+    type:'line',data:{labels:tendLabels,datasets:tendDs},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},
+    scales:{x:{ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:0},grid:{display:false}},
+    y:{ticks:{color:'#888',font:{size:10},callback:v=>'$'+(v/1000000).toFixed(1)+'M'},grid:{color:'rgba(0,0,0,0.04)'}}}}
+  });
+
+  // Donut
+  dk('ch-donut');
+  const dVals=puntos.map(p=>Math.round(data.filter(r=>r._p===p).reduce((s,r)=>s+gv(r),0)));
+  const dTot=dVals.reduce((a,b)=>a+b,0);
+  document.getElementById('leg-donut').innerHTML=puntos.map((p,i)=>'<span><span class="ld" style="background:'+CLR[p]+'"></span>'+p+' '+(dTot>0?Math.round(dVals[i]/dTot*100)+'%':'')+'</span>').join('');
+  chs['ch-donut']=new Chart(document.getElementById('ch-donut'),{
+    type:'doughnut',data:{labels:puntos,datasets:[{data:dVals,backgroundColor:puntos.map(p=>CLR[p]),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmt(c.raw)+' ('+Math.round(c.raw/dTot*100)+'%)'}}}}
+  });
+
+  // Top productos
+  const lista=selProd.size>0?PRODS.filter(p=>selProd.has(p.key)):PRODS;
+  const topProds=lista.map(p=>({
+    label:p.label,clr:PROD_CLR[p.key],
+    v:Math.round(data.reduce((s,r)=>s+pn(r[p.vk]),0)),
+    u:Math.round(data.reduce((s,r)=>s+pn(r[p.key]),0))
+  })).filter(p=>p.v>0).sort((a,b)=>b.v-a.v);
+  const maxV=Math.max(...topProds.map(p=>p.v),1);
+  document.getElementById('top-prod-tbody').innerHTML=topProds.map(p=>`
+    <tr><td><span class="bi" style="width:${Math.round(p.v/maxV*60)}px;background:${p.clr}"></span>${p.label}</td>
+    <td class="r">${fmt(p.v)}</td><td class="r">${fmtU(p.u)} und.</td>
+    <td class="r">${Math.round(p.v/total*100)}%</td></tr>`).join('');
+}
+
+function renderPuntos(data,puntos,meses){
+  // Metricas por punto
+  const labels=meses.map(m=>MESES[+m-1]||'M'+m);
+  let mHTML='';
+  puntos.forEach(p=>{
+    const dp=data.filter(r=>r._p===p);
+    const v=dp.reduce((s,r)=>s+gv(r),0);
+    const di=diasRealesPunto(data,p);
+    mHTML+=`<div class="mc" style="border-top-color:${CLR[p]}"><div class="ml">${p}</div><div class="mv mv-sm">${fmt(v)}</div><div class="ms">${fmt(v/di)}/dia</div></div>`;
+  });
+  document.getElementById('mrow-puntos').innerHTML=mHTML;
+
+  // Grafica valor
+  dk('ch-pv');
+  const dsV=puntos.map(p=>({label:p,data:meses.map(m=>Math.round(data.filter(r=>getMes(r)===m&&r._p===p).reduce((s,r)=>s+gv(r),0))),backgroundColor:CLR[p]+'BB',borderColor:CLR[p],borderWidth:1}));
+  document.getElementById('leg-pv').innerHTML=puntos.map(p=>'<span><span class="ld" style="background:'+CLR[p]+'"></span>'+p+'</span>').join('');
+  chs['ch-pv']=new Chart(document.getElementById('ch-pv'),{type:'bar',data:{labels,datasets:dsV},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},scales:{x:{ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:0},grid:{display:false}},y:{ticks:{color:'#888',font:{size:10},callback:v=>'$'+(v/1000000).toFixed(1)+'M'},grid:{color:'rgba(0,0,0,0.04)'}}}}});
+
+  // Grafica unidades
+  dk('ch-pu');
+  const dsU=puntos.map(p=>({label:p,data:meses.map(m=>Math.round(data.filter(r=>getMes(r)===m&&r._p===p).reduce((s,r)=>s+gu(r),0))),backgroundColor:CLR[p]+'BB',borderColor:CLR[p],borderWidth:1}));
+  document.getElementById('leg-pu').innerHTML=puntos.map(p=>'<span><span class="ld" style="background:'+CLR[p]+'"></span>'+p+'</span>').join('');
+  chs['ch-pu']=new Chart(document.getElementById('ch-pu'),{type:'bar',data:{labels,datasets:dsU},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtU(c.raw)+' und.'}}},scales:{x:{ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:0},grid:{display:false}},y:{ticks:{color:'#888',font:{size:10},callback:v=>fmtU(v)},grid:{color:'rgba(0,0,0,0.04)'}}}}});
+
+  // Ranking
+  const rankData=puntos.map(p=>{
+    const dp=data.filter(r=>r._p===p);
+    const v=dp.reduce((s,r)=>s+gv(r),0);
+    const u=dp.reduce((s,r)=>s+gu(r),0);
+    const di=diasRealesPunto(data,p);
+    const svc=dp.reduce((s,r)=>s+pn(r['Servicio'])+pn(r['DESCUENTO EMPLEADO']),0);
+    return {p,v,u,di,svc};
+  }).sort((a,b)=>b.v-a.v);
+  document.getElementById('ranking-tbody').innerHTML=rankData.map(r=>`
+    <tr><td><span class="punto-badge" style="background:${CLR[r.p]}">${r.p}</span></td>
+    <td class="r">${fmt(r.v)}</td><td class="r">${fmtU(r.u)} und.</td>
+    <td class="r">${(r.svc/r.di).toFixed(1)}</td><td class="r">${fmt(r.v/r.di)}</td></tr>`).join('');
+}
+
+function renderProductos(data,totalV){
+  dk('ch-prod');
+  const lista=selProd.size>0?PRODS.filter(p=>selProd.has(p.key)):PRODS;
+  const tots=lista.map(p=>({label:p.label,clr:PROD_CLR[p.key],
+    u:Math.round(data.reduce((s,r)=>s+pn(r[p.key]),0)),
+    v:Math.round(data.reduce((s,r)=>s+pn(r[p.vk]),0))
+  })).filter(p=>p.u>0).sort((a,b)=>b.u-a.u);
+  const h=Math.max(280,tots.length*42+80);
+  document.getElementById('ch-prod-wrap').style.height=h+'px';
+  chs['ch-prod']=new Chart(document.getElementById('ch-prod'),{type:'bar',
+    data:{labels:tots.map(p=>p.label),datasets:[{data:tots.map(p=>p.u),backgroundColor:tots.map(p=>p.clr+'99'),borderColor:tots.map(p=>p.clr),borderWidth:1}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtU(c.raw)+' und.'}}},
+    scales:{x:{ticks:{color:'#888',font:{size:10},callback:v=>fmtU(v)},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#444',font:{size:11}},grid:{display:false}}}}});
+  const tv=totalV||tots.reduce((s,p)=>s+p.v,0)||1;
+  const maxV=Math.max(...tots.map(p=>p.v),1);
+  document.getElementById('prod-det-tbody').innerHTML=tots.map(p=>{
+    const pp=p.u>0?Math.round(p.v/p.u):0;
+    return `<tr><td><span class="bi" style="width:${Math.round(p.v/maxV*60)}px;background:${p.clr}"></span>${p.label}</td>
+    <td class="r">${fmtU(p.u)} und.</td><td class="r">${fmt(p.v)}</td>
+    <td class="r">${pp>0?fmt(pp):'-'}</td><td class="r">${Math.round(p.v/tv*100)}%</td></tr>`;
+  }).join('');
+}
+
+function setTab(tab){
+  curTab=tab;
+  ['ejecutivo','puntos','productos'].forEach(t=>{
+    document.getElementById('tbtn-'+t).classList.toggle('active',t===tab);
+    document.getElementById('pane-'+t).style.display=t===tab?'block':'none';
+  });
+  render();
+}
+
+loadData();
+</script>
+</body>
+</html>
